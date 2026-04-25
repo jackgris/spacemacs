@@ -18,6 +18,7 @@ It is designed for traces like:
 - =outline-minor-mode= folding using the trace depth.
 - =imenu= support for jumping to call entries.
 - Navigation commands for next/previous trace entry.
+- Matching call/return highlighting, similar to bracket matching.
 - A summary command that counts calls, returns, info lines, and shows captured SQL queries.
 
 * Install
@@ -30,6 +31,7 @@ Files named =postgres_lesson_*.log= or ending in =.pgtrace= will open in
 * Key Bindings
 | Key binding | Description                    |
 |-------------+--------------------------------|
+| ~SPC m %~   | Jump to matching call/return   |
 | ~SPC m g n~ | Jump to next trace entry       |
 | ~SPC m g p~ | Jump to previous trace entry   |
 | ~SPC m o h~ | Hide subtree at point          |
@@ -38,5 +40,6 @@ Files named =postgres_lesson_*.log= or ending in =.pgtrace= will open in
 | ~SPC m o i~ | Show trace summary             |
 | ~n~         | Jump to next trace entry       |
 | ~p~         | Jump to previous trace entry   |
+| ~%~         | Jump to matching call/return   |
 | ~TAB~       | Toggle outline children        |
 | ~S-TAB~     | Show all folded trace entries  |

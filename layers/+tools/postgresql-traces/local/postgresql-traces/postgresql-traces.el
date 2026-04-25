@@ -51,14 +51,95 @@
      (6 font-lock-string-face)))
   "Font lock rules for `postgresql-trace-mode'.")
 
+(defvar-local postgresql-trace--match-overlays nil
+  "Overlays used to highlight matching PostgreSQL trace entries.")
+
 (defvar postgresql-trace-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "n") #'postgresql-trace-next-entry)
     (define-key map (kbd "p") #'postgresql-trace-previous-entry)
+    (define-key map (kbd "%") #'postgresql-trace-jump-to-matching-entry)
     (define-key map (kbd "TAB") #'outline-toggle-children)
     (define-key map (kbd "S-TAB") #'outline-show-all)
     map)
   "Keymap for `postgresql-trace-mode'.")
+
+(defun postgresql-trace--line-entry ()
+  "Return trace entry data for the current line.
+
+The return value is (PID DEPTH DIRECTION FUNCTION START END), or nil when the
+current line is not a function entry or exit."
+  (save-excursion
+    (beginning-of-line)
+    (when (looking-at postgresql-trace--entry-regexp)
+      (list (match-string-no-properties 2)
+            (match-string-no-properties 3)
+            (match-string-no-properties 5)
+            (match-string-no-properties 6)
+            (line-beginning-position)
+            (line-end-position)))))
+
+(defun postgresql-trace--matching-entry-regexp (pid depth direction function)
+  "Build regexp matching PID DEPTH DIRECTION FUNCTION on one trace line."
+  (concat "^[0-9][0-9]:[0-9][0-9]:[0-9][0-9]\\.[0-9]+"
+          " +P@" (regexp-quote pid) "@" (regexp-quote depth)
+          " +|+" (regexp-quote direction)
+          (regexp-quote function)
+          "\\(?:[[:space:]]\\|$\\)"))
+
+(defun postgresql-trace--matching-entry-position ()
+  "Return the matching trace entry line bounds, or nil."
+  (pcase-let ((`(,pid ,depth ,direction ,function ,_start ,_end)
+               (postgresql-trace--line-entry)))
+    (when direction
+      (let ((regexp (postgresql-trace--matching-entry-regexp
+                     pid depth (if (string= direction ">") "<" ">") function)))
+        (save-excursion
+          (if (string= direction ">")
+              (progn
+                (end-of-line)
+                (when (re-search-forward regexp nil t)
+                  (save-excursion
+                    (goto-char (match-beginning 0))
+                    (list (line-beginning-position) (line-end-position)))))
+            (beginning-of-line)
+            (when (re-search-backward regexp nil t)
+              (save-excursion
+                (goto-char (match-beginning 0))
+                (list (line-beginning-position) (line-end-position))))))))))
+
+(defun postgresql-trace--clear-match-overlays ()
+  "Remove current trace match overlays."
+  (mapc #'delete-overlay postgresql-trace--match-overlays)
+  (setq postgresql-trace--match-overlays nil))
+
+(defun postgresql-trace--make-match-overlay (start end face)
+  "Create a trace match overlay from START to END using FACE."
+  (let ((overlay (make-overlay start end)))
+    (overlay-put overlay 'face face)
+    (overlay-put overlay 'priority 1000)
+    (push overlay postgresql-trace--match-overlays)))
+
+(defun postgresql-trace-highlight-matching-entry ()
+  "Highlight the trace entry matching the line at point."
+  (postgresql-trace--clear-match-overlays)
+  (let ((entry (postgresql-trace--line-entry))
+        (match (postgresql-trace--matching-entry-position)))
+    (when entry
+      (postgresql-trace--make-match-overlay
+       (nth 4 entry) (nth 5 entry)
+       (if match 'show-paren-match 'show-paren-mismatch))
+      (when match
+        (postgresql-trace--make-match-overlay
+         (car match) (cadr match) 'show-paren-match)))))
+
+(defun postgresql-trace-jump-to-matching-entry ()
+  "Jump between matching PostgreSQL trace call and return entries."
+  (interactive)
+  (let ((match (postgresql-trace--matching-entry-position)))
+    (if match
+        (goto-char (car match))
+      (user-error "No matching PostgreSQL trace entry found"))))
 
 (defun postgresql-trace--outline-level ()
   "Return the current trace call depth for `outline-minor-mode'."
@@ -129,6 +210,7 @@
   (setq-local outline-level #'postgresql-trace--outline-level)
   (setq-local truncate-lines t)
   (postgresql-trace--setup-imenu)
+  (add-hook 'post-command-hook #'postgresql-trace-highlight-matching-entry nil t)
   (outline-minor-mode 1))
 
 ;;;###autoload

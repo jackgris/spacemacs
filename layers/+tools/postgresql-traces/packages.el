@@ -32,6 +32,7 @@
     (spacemacs/declare-prefix-for-mode 'postgresql-trace-mode "mg" "goto")
     (spacemacs/declare-prefix-for-mode 'postgresql-trace-mode "mo" "outline")
     (spacemacs/set-leader-keys-for-major-mode 'postgresql-trace-mode
+      "%" 'postgresql-trace-jump-to-matching-entry
       "gn" 'postgresql-trace-next-entry
       "gp" 'postgresql-trace-previous-entry
       "oh" 'outline-hide-subtree
