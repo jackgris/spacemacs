@@ -1,0 +1,42 @@
+#+TITLE: PostgreSQL traces layer
+
+#+TAGS: layer|tool
+
+* Description
+This layer provides a major mode for reading PostgreSQL internal trace logs.
+
+It is designed for traces like:
+
+#+BEGIN_EXAMPLE
+09:35:55.975509 P@20942@02 ||>ReadCommand
+09:35:55.975445 P@20942@03 |||info: query string:insert into t values(1);
+09:35:55.975440 P@20942@02 ||<ReadCommand
+#+END_EXAMPLE
+
+** Features:
+- Syntax highlighting for timestamps, process ids, call depth, calls, returns, and =info:= lines.
+- =outline-minor-mode= folding using the trace depth.
+- =imenu= support for jumping to call entries.
+- Navigation commands for next/previous trace entry.
+- A summary command that counts calls, returns, info lines, and shows captured SQL queries.
+
+* Install
+To use this configuration layer, add =postgresql-traces= to the existing
+=dotspacemacs-configuration-layers= list in your =~/.spacemacs= file.
+
+Files named =postgres_lesson_*.log= or ending in =.pgtrace= will open in
+=postgresql-trace-mode=.
+
+* Key Bindings
+| Key binding | Description                    |
+|-------------+--------------------------------|
+| ~SPC m g n~ | Jump to next trace entry       |
+| ~SPC m g p~ | Jump to previous trace entry   |
+| ~SPC m o h~ | Hide subtree at point          |
+| ~SPC m o s~ | Show subtree at point          |
+| ~SPC m o a~ | Show all folded trace entries  |
+| ~SPC m o i~ | Show trace summary             |
+| ~n~         | Jump to next trace entry       |
+| ~p~         | Jump to previous trace entry   |
+| ~TAB~       | Toggle outline children        |
+| ~S-TAB~     | Show all folded trace entries  |
