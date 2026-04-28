@@ -38,4 +38,9 @@
       "oh" 'outline-hide-subtree
       "os" 'outline-show-subtree
       "oa" 'outline-show-all
-      "oi" 'postgresql-trace-show-summary)))
+      "oi" 'postgresql-trace-show-summary)
+    :config
+    (evilified-state-evilify-map postgresql-trace-mode-map
+      :mode postgresql-trace-mode
+      :bindings
+      (kbd "C-l") 'recenter-top-bottom)))

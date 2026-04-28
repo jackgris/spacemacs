@@ -59,6 +59,7 @@
     (define-key map (kbd "n") #'postgresql-trace-next-entry)
     (define-key map (kbd "p") #'postgresql-trace-previous-entry)
     (define-key map (kbd "%") #'postgresql-trace-jump-to-matching-entry)
+    (define-key map (kbd "C-l") #'recenter-top-bottom)
     (define-key map (kbd "TAB") #'outline-toggle-children)
     (define-key map (kbd "S-TAB") #'outline-show-all)
     map)
